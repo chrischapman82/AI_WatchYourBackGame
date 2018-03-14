@@ -14,16 +14,16 @@ DOWN = 2
 LEFT = 3
 
 
-
+BOARD_LEN = 8
 
 
 ############## MOVES ################
 def countMovesByColour(colour, board):
     count = 0
 
-    for x in range(board_len):
+    for x in range(BOARD_LEN):
         print(board[x])
-        for y in range(board_len):
+        for y in range(BOARD_LEN):
             
             if board[x][y] == colour:
                 
@@ -74,12 +74,65 @@ def getCoordInDir(x,y, dir):
 ############## MASSACRE ################
 
 #Init Killable Black Array:
-#Get pos of all 
-#While Black array is !empty
+#Get pos of all kill pairs
+#Could get pairs of kill spots!
+    #killable if 2 opposite spaces are open
+    #For each kill pair:
+        #
+#While Black array is !empty -> keep running
+
+def killThemAll(board):
+    
+    killable = []
+    
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == BLACK_PIECE:
+                print("Checking ")
+                print(x,y)
+                # Checks for kill pairs. Then, adds them to array
+                killable += (isKillable(WHITE_PIECE, x, y, board))
+
+                print(killable)
 
 
+# Checks if a peice is killable and returns the possible kill pairs as
+# as an array of tuples
+def isKillable(colour, x, y, board):
+    killable = []
 
+    # Checks horizontal pair
+    if (isKillSpot(getCoordInDir(x,y,LEFT), board, colour) and
+        isKillSpot(getCoordInDir(x,y,RIGHT), board, colour)):
+        killable += (x,y)
 
+    # checks vertical pair
+    if (isKillSpot(getCoordInDir(x,y,UP), board, colour) and
+        isKillSpot(getCoordInDir(x,y,DOWN), board, colour)):
+        killable += (x,y)
+    #print(killable)
+    return killable
+
+        
+
+def isKillSpot(coord, board, colour):
+
+    if isOffBoard(coord, board):
+        return False
+    
+    curr = board[coord[0]][coord[1]]
+    return (curr == CORNER or
+            curr == colour or
+            curr == EMPTY)
+    
+
+def isOffBoard(coord,board):
+    x = coord[0]
+    y = coord[1]
+    if (x<0 or x>7 or y<0 or y>7):
+        return True
+    return False
+        
 
 ############## START PROGRAM ################
 
@@ -89,19 +142,24 @@ board = []
 
 #s = input()
 
-board_len = 8
-for i in range(board_len):
-    temp_line = input().split(" ")
-    board.append(temp_line)
+
+def initBoard():
+    for i in range(BOARD_LEN):
+        temp_line = input().split(" ")
+        board.append(temp_line)
+
+initBoard()
 
 print(board)
 # if move:
 # count Moves by Colour
 
-if (input() = "Moves"):
+#if (input() = "Moves"):
     
 
 countMovesByColour(BLACK_PIECE, board)
 countMovesByColour(WHITE_PIECE, board)
+
+killThemAll(board)
 
 
