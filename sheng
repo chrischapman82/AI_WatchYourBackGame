@@ -1,0 +1,15 @@
+board_size = 8
+board = []
+
+for i in range(board_size):
+    temp_line = input().split(" ")
+    board.append(temp_line)
+
+instruction = input()
+
+if insturction == "Moves":
+    
+    
+elif instruction == "Massacre":
+    
+print(board)
