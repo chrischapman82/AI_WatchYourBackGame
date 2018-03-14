@@ -1,23 +1,27 @@
 
 s = input()
 
+%sample input
+a ="X - - - - - - X - - - - - - - - - - - - - 0 0 - - - - - @ 0 - - - - - - - - - - - - - - - 0 - - - - - - @ - @ @ X - - - - - - X"
+
 EMPTY = "-"
 CORNER = "X"
 WHITE_PIECE = "O"
 BLACK_PIECE = "@"
 
+DIRECTIONS = [0,1,2,3]
 UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-map = s.split(" ")
-
-class Piece:
-    x,y,colour
+s = input;
+board = s.split(" ")
 
 
-def countMovesByColour(colour, map):
+
+
+def countMovesByColour(colour, board):
 
     count = 0
     i = 0
@@ -27,15 +31,15 @@ def countMovesByColour(colour, map):
 
         i+=1
 
-
-def getAdjacentMoves(piece):
+def getAdjacentMoves(piece_colour, piece_coord, board):
     i=0
-    for i in range(0,4):
-        if (
+    for i in DIRECTIONS:
+        
+        
     #for each adj space:
 
 
-def getTileInDirection(piece, dir):
+def getTileInDirection(piece_coord, dir):
     x = piece.x
     y = piece.y
     if dir == LEFT:
