@@ -181,15 +181,16 @@ def findClosestPiece(loc):
                 visited[adj[i][0]][adj[i][1]] = visited[curr[0]][curr[1]]+1
 
     printBoard(visited)
-    for i in range(BOARD_LEN):
-        print(visited[i])
 
 
 def printBoard(board):
+    print("Printing out the current board:")
     for i in range(BOARD_LEN):
+        print("|",end="")
         for j in range(BOARD_LEN):
-            print(board[i][j],end='').format
-        print()
+            print("{0:3d}".format(board[i][j]),end="")
+        print("|")    
+                  
 
 def isOffBoard(coord,board):
     x = coord[0]
@@ -226,5 +227,3 @@ countMovesByColour(BLACK_PIECE, board)
 countMovesByColour(WHITE_PIECE, board)
 
 killThemAll(board)
-
-
