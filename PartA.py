@@ -243,14 +243,14 @@ def a_star(start, finish):
     visited = init_visited()  # init the visited coordinates
     # push the current node with the f value for the prio q
     heapq.heappush(Q, (curr.f, curr))
-    visited[curr[1].coord.x][curr[1].coord.y] = curr.f
+    visited[curr.coord.x][curr.coord.y] = curr.f
     closed = []
     # go through all possible adjacent moves
 
     while len(Q) != 0:
         # get the node with the lowest f value
-        curr = heapq.heappop(Q)
-
+        curr = heapq.heappop(Q)[1]  # ignorses the prio q value
+        curr_coord = curr.coord
         # have we found the end?
         if curr.coord == finish:
             break
@@ -258,11 +258,11 @@ def a_star(start, finish):
         # adding to the closed set
 
         # check adjacent squares for unvisited coordinates
-        adj = getAdjacentMoves(curr, board)
+        adj = getAdjacentMoves(curr.coord, board)
         for next_coord in adj:
             # TODO add constant for +1
 
-            next = Node(next_coord, visited[curr.x][curr.y] + 1, getManhattanDistance(next_coord, finish))
+            next = Node(next_coord, visited[curr.coord.x][curr.coord.y] + 1, getManhattanDistance(next_coord, finish))
             if (visited[next.coord.x][next.coord.y] == NOT_VISITED or
                     (next.f < visited[next.coord.x][next.coord.y])):  # TODO do I have to compare f values
                 # add node to q
@@ -329,6 +329,5 @@ countMovesByColour(WHITE_PIECE, board)
 
 
 
-
-killThemAll(board)
 a_star(Coordinate(3, 3), Coordinate(5, 5))
+killThemAll(board)
