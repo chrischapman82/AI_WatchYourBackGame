@@ -18,6 +18,7 @@ LEFT = 3
 
 NOT_VISITED = -1
 BOARD_LEN = 8
+MOVE_COST = 1
 
 
 # Class for coordinates because they're easier like this
@@ -33,12 +34,23 @@ class Coordinate:
         return "[" + str(self.x) + "," + str(self.y) + "]"
 
 
+class Piece:
+    def __init__(self, coord, colour):
+        self.coord = coord
+        self.colour = colour
+        self.move_costs = do_bfs(coord)  # creates a map with the given move costs
+
+
 class Node:
     def __init__(self, coord, g, h):
         self.coord = coord
         self.g = g
         self.h = h
         self.f = h + g
+
+    def __str__(self):  # For printing
+        out = str(self.coord) + ":" + str(self.g) + " " + str(self.h) + " " + str(self.f)
+        return out
 
 
 ############## MOVES ################
@@ -122,6 +134,45 @@ def getCoordInDir(coord, dir):
 def killThemAll(board):
     killable = []
 
+    white_pieces = get_pieces_of_colour(WHITE_PIECE, board)
+
+    # create kill_pair array
+    # should be a priority queue,
+    # use white_pieces.board[x][y] to get dist to given spot
+
+    black_pieces = get_pieces_of_colour(BLACK_PIECE, board)
+
+    # go through the killable spots
+    for piece in black_pieces:
+        killable = (isKillable(piece.colour, piece.coord, board))
+
+        # pair has form [coord1, coord2]
+        #for pair in killable:
+
+            # checks for the nearest 2 pieces to the kill spot
+
+            #spot1_closest = get_closest_pieces(pair[0], white_pieces, board)
+            #spot2_closest = get_closest_pieces(pair[1], white_pieces, board)
+
+            #spot
+            #print("spot1 = " + spot1_closest)
+
+
+# gets the pieces target closest to the given coordinate. Returned as a priority Q
+def get_closest_pieces(target_coord, pieces):
+    min_cost = 1000
+    closest_pieces = []
+    cost_list = []
+    for piece in pieces:
+
+        cost_list.append(piece.move_costs[target_coord.x][target_coord.y])
+
+        # a priority Q would be better here
+
+    return closest_pieces
+
+
+    '''
     for x in range(BOARD_LEN):
         for y in range(BOARD_LEN):
             if board[x][y] == BLACK_PIECE:
@@ -130,10 +181,26 @@ def killThemAll(board):
 
                 coord = Coordinate(x, y)
                 # Checks for kill pairs. Then, adds them to array
-                killable += (isKillable(WHITE_PIECE, coord.x, coord.y, board))
+                do_bfs(Coordinate(0,0))
+
+                killable += (isKillable(WHITE_PIECE, coord, board))
                 for i in range(len(killable)):
                     findClosestPiece(killable[i][0])
                     findClosestPiece(killable[i][1])
+    '''
+
+#def get_killable_pairs():
+
+
+# Returns an array of the pieces of a given colour
+def get_pieces_of_colour(colour, board):
+    pieces = []
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == colour:
+                piece = Piece(Coordinate(x, y), colour)
+                pieces.append(piece)
+    return pieces
 
 
 # returns the minigun distance
@@ -141,21 +208,15 @@ def getManhattanDistance(start, finish):
     return abs(start.x - finish.x) + abs(start.y - finish.y)
 
 
-# Checks if a peice is killable and returns the possible kill pairs as
+# Checks if a piece is killable and returns the possible kill pairs as
 # as an array of tuples
-def isKillable(colour, x, y, board):
-    killable = []  # todo change signature to coord
+def isKillable(colour, coord, board):
+    killable = []
 
     # Checks horizontal pair
 
-    coord = Coordinate(x, y)
     if (isKillSpot(getCoordInDir(coord, LEFT), board, colour) and
             isKillSpot(getCoordInDir(coord, RIGHT), board, colour)):
-        # this means killable = [[(2,4),(4,4)],[...]]
-        # puts the array in the form [PAIR,PAIR,PAIR]...
-        # first pair is accessed through k[0]
-        # side of pair is accesssed through k[0][0]
-        # x of side of pair is accessed through k[0][0][0]
         killable += [[(getCoordInDir(coord, LEFT)), getCoordInDir(coord, RIGHT)]]
 
     # checks vertical pair
@@ -165,6 +226,7 @@ def isKillable(colour, x, y, board):
     # print(killable)
     return killable
 
+#[(coord1,coord2),(coord1,coord2)]
 
 def isKillSpot(coord, board, colour):
     if isOffBoard((coord.x, coord.y), board):
@@ -216,6 +278,30 @@ def findClosestPiece(coord):
     printBoard(visited)
 
 
+def do_bfs(coord):
+    print(coord)
+    print()
+    visited = init_visited()
+    dist = 0
+    visited[coord.x][coord.y] = dist
+
+    q = Queue()
+    q.put(coord)
+
+    while not q.empty():
+        dist += 1
+        curr = q.get()
+        adj = getAdjacentMoves(curr, board)
+        for i in range(len(adj)):
+            nxt = adj[i]
+            if visited[nxt.x][nxt.y] == NOT_VISITED:  # if visited - ignore
+                q.put(nxt)
+                visited[nxt.x][nxt.y] = visited[curr.x][curr.y] + MOVE_COST
+
+    printBoard(visited) #remove to stop printing
+    return visited
+
+
 def printBoard(board):
     print("Printing out the current board:")
     for i in range(BOARD_LEN):
@@ -239,19 +325,31 @@ def a_star(start, finish):
     Q = []  # init priority queue
     # In the form: Node(coord, g,h)
     curr = Node(start, 0, getManhattanDistance(start, finish))
-
-    visited = init_visited()  # init the visited coordinates
+    print(curr)
+    # visited = init_visited()  # init the visited coordinates
     # push the current node with the f value for the prio q
-    heapq.heappush(Q, (curr.f, curr))
-    visited[curr.coord.x][curr.coord.y] = curr.f
+
+    # init visited array
+    visited = []
+    for i in range(BOARD_LEN):
+        temp_line = []
+        for j in range(BOARD_LEN):
+            temp_line.append(None)
+        visited.append(temp_line)
+
+    heapq.heappush(Q, (curr.g, curr))
+    visited[curr.coord.x][curr.coord.y] = curr
     closed = []
+
     # go through all possible adjacent moves
 
     while len(Q) != 0:
         # get the node with the lowest f value
-        curr = heapq.heappop(Q)[1]  # ignorses the prio q value
-        curr_coord = curr.coord
-        # have we found the end?
+
+        print(curr)
+        curr = heapq.heappop(Q)[1]  # ignores the prio q value
+
+        # have we found our goal?
         if curr.coord == finish:
             break
 
@@ -262,15 +360,29 @@ def a_star(start, finish):
         for next_coord in adj:
             # TODO add constant for +1
 
-            next = Node(next_coord, visited[curr.coord.x][curr.coord.y] + 1, getManhattanDistance(next_coord, finish))
-            if (visited[next.coord.x][next.coord.y] == NOT_VISITED or
-                    (next.f < visited[next.coord.x][next.coord.y])):  # TODO do I have to compare f values
+            nxt = Node(next_coord, curr.g + MOVE_COST, getManhattanDistance(next_coord, finish))
+            if (visited[nxt.coord.x][nxt.coord.y] == None or
+                    (nxt.g < visited[nxt.coord.x][nxt.coord.y].g)):  # TODO do I have to compare f values
                 # add node to q
                 # add coord to visited
+                heapq.heappush(Q, (nxt.g, nxt))
 
-                visited[next.coord.x][next.coord.y] = next.f
+                visited[nxt.coord.x][nxt.coord.y] = nxt
 
-    printBoard(visited)
+    printBoardNodes(visited)
+
+
+def printBoardNodes(board):
+    print("Printing out the current board:")
+    for i in range(BOARD_LEN):
+        print("|", end="")
+        for j in range(BOARD_LEN):
+            if board[i][j] == None:
+                print("-1", end="")
+            else:
+                print(board[i][j].f, end="")
+            # print(board[i][j])
+        print("|")
 
     # add node to priority Q w/ value f
     # f = g + h
@@ -305,15 +417,10 @@ def init_visited():
 # Reads in input
 board = []
 
-
-# s = input()
-
-
 def initBoard():
     for i in range(BOARD_LEN):
         temp_line = input().split(" ")
         board.append(temp_line)
-
 
 initBoard()
 
@@ -327,7 +434,5 @@ print(board)
 countMovesByColour(BLACK_PIECE, board)
 countMovesByColour(WHITE_PIECE, board)
 
-
-
-a_star(Coordinate(3, 3), Coordinate(5, 5))
+# a_star(Coordinate(1, 3), Coordinate(7, 5))
 killThemAll(board)
