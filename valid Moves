@@ -1,0 +1,106 @@
+############## CONSTANT DEFINITIONS ################
+
+# BOARD CONSTANTS
+NOT_VISITED = -1
+BOARD_LEN = 8
+
+# BOARD SYMBOLS
+EMPTY = "-"
+CORNER = "X"
+WHITE_PIECE = "O"
+BLACK_PIECE = "@"
+
+# PART NAME
+MOVES = "Moves"
+MASSACRE = "Massacre"
+
+# DIRECTION CONSTANT
+DIRECTIONS = [0, 1, 2, 3]
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+
+
+
+############## CLASS DEFINITION ################
+class Coordinate:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+############## PART 0: INPUT ################
+def inputBoard(board):
+    for i in range(BOARD_LEN):
+        temp_line = input().split(" ")
+        board.append(temp_line)
+        print(temp_line)
+
+############## PART 1: MOVES ################
+def countMovesByColour(colour, board):
+    count = 0
+
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == colour:
+                coord = Coordinate(x, y)
+                count += len(getAdjMoves(coord, board))
+    print(count)
+
+############## PART 1: HELPER FUNCTIONS ################
+def getAdjMoves(coord, board):
+    moves = []
+    for direction in DIRECTIONS:
+        check = getCoordInDir(coord, direction)
+
+        if isOutOfBounds(check, board):
+            continue
+
+        checkPiece = board[check.x][check.y]
+
+        if checkPiece == WHITE_PIECE or checkPiece == BLACK_PIECE:
+            check = getCoordInDir(check, direction)
+            if isOutOfBounds(check, board) or board[check.x][check.y] != EMPTY:
+                continue
+        moves.append(check)
+    return moves
+
+def isOutOfBounds(coord, board):
+    x = coord.x
+    y = coord.y
+    if x < 0 or x > 7 or y < 0 or y > 7 or board[x][y] == CORNER:  # todo use static variables
+        return True
+    return False
+
+def getCoordInDir(coord, direction):
+    x = coord.x
+    y = coord.y
+
+    if direction == LEFT:
+        x = x - 1
+    elif direction == UP:
+        y = y + 1
+    elif direction == RIGHT:
+        x = x + 1
+    elif direction == DOWN:
+        y = y - 1
+
+    return Coordinate(x, y)
+
+############## MAIN PROGRAM ################
+def main():
+    board = []
+    inputBoard(board)
+
+    instruction = input()
+    if instruction == MOVES:
+        countMovesByColour(WHITE_PIECE, board)
+        countMovesByColour(BLACK_PIECE, board)
+    elif instruction == MASSACRE:
+        massacre(board)
+        
+
+############## RUN PROGRAM ################
+main()
+
+############## END OF PROJECT 1 CODE ################
