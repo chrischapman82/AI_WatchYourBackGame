@@ -1,0 +1,210 @@
+from queue import *
+############## CONSTANT DEFINITIONS ################
+
+# BOARD CONSTANTS
+NOT_VISITED = -1
+BOARD_LEN = 8
+MOVE_COST = 1
+MAX_COST = 1000
+
+# BOARD SYMBOLS
+EMPTY = "-"
+CORNER = "X"
+WHITE_PIECE = "O"
+BLACK_PIECE = "@"
+
+# PART NAME
+MOVES = "Moves"
+MASSACRE = "Massacre"
+
+# DIRECTION CONSTANT
+DIRECTIONS = [0, 1, 2, 3]
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+
+# KILL COORDINATE INDEX
+TARGET_COORD = 0
+KILL_PAIR_COORD = 1
+
+############## CLASS DEFINITION ################
+class Coordinate:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):
+        return str(self.x) + "," + str(self.y)
+
+class Piece:
+    def __init__(self, coord, colour):
+        self.coord = coord
+        self.colour = colour
+        self.moveCostMap = doBFS(coord)
+
+    def __repr__(self):
+        return self.coord
+
+############## PART 0: INPUT ################
+def inputBoard(board):
+    for i in range(BOARD_LEN):
+        temp_line = input().split(" ")
+        board.append(temp_line)
+        print(temp_line)
+
+############## PART 1: MOVES ################
+def countMovesByColour(colour, board):
+    count = 0
+
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == colour:
+                coord = Coordinate(x, y)
+                count += len(getAdjMoves(coord, board))
+    print(count)
+
+############## PART 1: HELPER FUNCTIONS ################
+def getAdjMoves(coord, board):
+    moves = []
+    for direction in DIRECTIONS:
+        check = getCoordInDir(coord, direction)
+
+        if isOutOfBounds(check, board):
+            continue
+
+        checkPiece = board[check.x][check.y]
+
+        if checkPiece == WHITE_PIECE or checkPiece == BLACK_PIECE:
+            check = getCoordInDir(check, direction)
+            if isOutOfBounds(check, board) or board[check.x][check.y] != EMPTY:
+                continue
+        moves.append(check)
+    return moves
+
+def isOutOfBounds(coord, board):
+    x = coord.x
+    y = coord.y
+    if x < 0 or x > 7 or y < 0 or y > 7 or board[x][y] == CORNER:  # todo use static variables
+        return True
+    return False
+
+def getCoordInDir(coord, direction):
+    x = coord.x
+    y = coord.y
+
+    if direction == LEFT:
+        x = x - 1
+    elif direction == UP:
+        y = y + 1
+    elif direction == RIGHT:
+        x = x + 1
+    elif direction == DOWN:
+        y = y - 1
+
+    return Coordinate(x, y)
+
+############## PART 2: MASSACRE ################
+def massacre(board):
+    killPairs = getKillable(board)
+    white_pieces = getPiecesOfColour(WHITE_PIECE, board)
+    black_pieces = getPiecesOfColour(BLACK_PIECE, board)
+    costToKill = []
+    for killPair in killPairs:
+
+def findClosestPiece(targetCoord, pieces, board):
+    min_cost = MAX_COST
+    closestPieces = []
+    costList = []
+
+    for piece in pieces:
+        costList.append(piece.moveCostMap[targetCoord.x][targetCoord.y])
+
+    return costList
+    
+
+
+############## PART 2: HELPER FUNCTIONS: KILL PAIRS ################
+def getPiecesOfColour(colour, board):
+    pieces = []
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == colour:
+                pieces.append(Piece(Coordinate(x, y), colour))
+    return pieces
+
+def getKillable(board):
+    killPairs = []
+    for x in range(BOARD_LEN):
+        for y in range(BOARD_LEN):
+            if board[x][y] == BLACK_PIECE:
+                coord = Coordinate(x, y)
+                findKillPair(killPairs, WHITE_PIECE, coord, board)
+
+    return(killPairs)
+
+def findKillPair(killPairs, colour, coord, board):
+    leftCoord = getCoordInDir(coord, LEFT)
+    rightCoord = getCoordInDir(coord, RIGHT)
+    upCoord = getCoordInDir(coord, UP)
+    downCoord = getCoordInDir(coord, DOWN)
+
+    if isKillSpot(leftCoord, board, colour) and isKillSpot(rightCoord, board, colour):
+        killPairs.append((coord, [leftCoord, rightCoord]))
+
+    if isKillSpot(upCoord, board, colour) and isKillSpot(downCoord, board, colour):
+        killPairs.append((coord, [upCoord, downCoord]))
+
+def isKillSpot(coord, board, colour):
+    x = coord.x
+    y = coord.y
+    if x < 0 or x > 7 or y < 0 or y > 7:
+        return False
+
+    check = board[x][y]
+
+    return (check == CORNER or check == colour or check == EMPTY)
+
+
+############## PART 2: HELPER FUNCTIONS: SEARCH ################
+def doBFS(coord):
+    costMap = initCostMap()
+    dist = 0
+    costMap[coord.x][coord.y] = dist
+
+    q = Queue()
+    q.put(coord)
+
+    while not q.empty():
+        dist += 1
+        curr = q.get()
+        adj = getAdjMoves(curr, board)
+        for move in adj:
+            if costMap[move.x][move.y] == NOT_VISITED:
+                q.put(move)
+                costMap[move.x][move.y] = costMap[curr.x][curr.y] + MOVE_COST
+    print(coord)
+    for row in costMap:
+        print(row)
+    return costMap
+
+def initCostMap():
+    costMap = []
+    for i in range(BOARD_LEN):
+        tempLine = []
+        for j in range(BOARD_LEN):
+            tempLine.append(NOT_VISITED)
+        costMap.append(tempLine)
+    return costMap
+
+############## RUN PROGRAM ################
+board = []
+inputBoard(board)
+instruction = input()
+if instruction == MOVES:
+    countMovesByColour(WHITE_PIECE, board)
+    countMovesByColour(BLACK_PIECE, board)
+elif instruction == MASSACRE:
+    massacre(board)
+    
+############## END OF PROJECT 1 CODE ################
