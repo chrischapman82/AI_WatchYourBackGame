@@ -16,7 +16,7 @@ RIGHT = 1
 DOWN = 2
 LEFT = 3
 
-NOT_VISITED = -1
+NOT_VISITED = 99
 BOARD_LEN = 8
 MOVE_COST = 1
 
@@ -83,7 +83,6 @@ def get_adj_moves(coord, board):
         # checks if out of bounds!
         if is_out_of_bounds(curr, board) or board[curr.y][curr.x] == CORNER:  # && corner
             # Can't move here
-            #print("is out of bounds")
             continue
 
         curr_piece = board[curr.y][curr.x]  # todo
@@ -94,8 +93,7 @@ def get_adj_moves(coord, board):
         if curr_piece == WHITE_PIECE or curr_piece == BLACK_PIECE:
             curr = get_coord_in_dir(curr, dir)  # todo
 
-            if (is_out_of_bounds(curr, board) or
-                    board[coord.y][coord.x] != EMPTY):
+            if is_out_of_bounds(curr, board) or board[curr.y][curr.x] != EMPTY:
                 # Can't jump over piece
                 continue
 
@@ -153,18 +151,23 @@ def killThemAll(board):
     # go through the killable spots
     print("looping thorugh black pieces")
     for piece in black_pieces:
-
+        print("next black piece")
         # killable is an array of kill pair spots
-        killable += (isKillable(WHITE_PIECE, piece.coord, board))
-        print(killable)
+        #killable += (isKillable(WHITE_PIECE, piece.coord, board))
+        killable = isKillable(WHITE_PIECE, piece.coord, board)
+        print("killable = ", killable)
 
         # pair has form [coord1, coord2] OR [coord1]
+        arr = []
         for pair in killable:
-            print(pair)
+            print("pair = ", pair)
 
             #print("closest", get_closest_piece(Coordinate(4,4), white_pieces))
-
-            print("getting closest 2", get_closest_2_pieces(pair, white_pieces))
+            #print("Getting 2 closest pieces")
+            #arr.append(get_closest_2_pieces(pair, white_pieces))
+            #print("arr = ", arr)
+            white_pieces = get_pieces_of_colour(WHITE_PIECE, board)
+            print("returns", get_closest_2_pieces(pair, white_pieces))
             #get_dist_to_coords()
             # checks for the nearest 2 pieces to the kill spot
 
@@ -178,56 +181,53 @@ def killThemAll(board):
 # coords - an array of coordinates. Going to be 2 or 1 for this
 # assumes there's at least 1 piece
 def get_closest_piece(coord, pieces):
-
-    piece_prioq = []
-
+    print("get closest piece!", pieces)
     lo = 1000
     min_piece = None
+    #print("get closest pieces", pieces)
     for piece in pieces:
         curr = piece.move_costs[coord.y][coord.x]
 
-        if (curr < lo):
+        print(piece, curr)
+        if curr < lo:
             min_piece = piece
             lo = curr
-
+    print("the closest is:", min_piece);
     return min_piece
 
 
 def get_closest_2_pieces(target_pair, pieces):
-    pieces = pieces
+    targets = target_pair   # to save from in place changing
+    attacking_pieces = pieces
     tot_dist = 0
     closest_pieces = []
+    print("pieces = ", pieces)
+
+    # don't check if the piece is already there!
+    for coord in targets:
+
+        if get_piece_from_coord(coord, board) == WHITE_PIECE:
+            target_pair.remove(coord)
+            attacking_pieces.remove(get_closest_piece(coord, attacking_pieces))
+
     print("target_pair =", target_pair)
-    for coord in target_pair:
-        piece = get_closest_piece(coord, pieces)
+
+    for coord in targets:
+        piece = get_closest_piece(coord, attacking_pieces)        #
 
         # keeps getting available pieces that haven't been mentioned before
         while piece in closest_pieces:
 
             # can it be a case where it doesn't exist
+            attacking_pieces.remove(piece)
+            piece = get_closest_piece(coord, attacking_pieces)
 
-            pieces.remove(piece)
-            piece = get_closest_piece(coord, pieces)
         tot_dist += piece.move_costs[coord.y][coord.x]
-        closest_pieces.append(piece)
+        closest_pieces.append([piece, coord])
     return [tot_dist, closest_pieces]
 
 
 
-# gets the pieces target closest to the given coordinate. Returned as a priority Q
-def get_closest_pieces(target_coords, pieces):
-    min_cost = 1000
-    closest_piece
-    cost_list = []
-
-    for piece in pieces:
-
-        print()
-
-
-        # a priority Q would be better here
-
-    return closest_pieces
 
 #def get_closest(target_coord):
 
@@ -296,14 +296,14 @@ def isKillable(colour, coord, board):
 
         #killable += [[up, down]]    # add a pair
 
-    print(killable)
+    #print("killable = ", killable)
     return killable
 
 
 #[(coord1,coord2),(coord1,coord2)]
 
 def isKillSpot(coord, board, colour):
-    if is_off_board(coord, board):
+    if is_off_board(coord):
         return False
 
     curr = get_piece_from_coord(coord, board)
@@ -312,7 +312,7 @@ def isKillSpot(coord, board, colour):
             curr == EMPTY)
 
 
-def is_off_board(coord, board):
+def is_off_board(coord):
     x = coord.x
     y = coord.y
     if x < 0 or x > 7 or y < 0 or y > 7:
@@ -379,7 +379,7 @@ def do_bfs(coord):
                 q.put(nxt)
                 visited[nxt.y][nxt.x] = visited[curr.y][curr.x] + MOVE_COST
 
-    print_board(visited) #remove to stop printing
+    #print_board(visited) #remove to stop printing
     return visited
 
 
@@ -402,6 +402,7 @@ def isOffBoard(coord, board):  # todo cahnge to otehr
 
 
 # Using Heap queues from: https://dbader.org/blog/priority-queues-in-python
+'''
 def a_star(start, finish):
     Q = []  # init priority queue
     # In the form: Node(coord, g,h)
@@ -481,7 +482,7 @@ def printBoardNodes(board):
     # g = curr + distToAdj (1)
     # recalc h from adj to finish
     # recalc f
-
+'''
 
 def init_visited():
     visited = []
