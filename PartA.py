@@ -74,6 +74,10 @@ def countMovesByColour(colour, board):
     print(count)
 
 
+def print_board_state(board):
+    for y in range(BOARD_LEN):
+        print(board[y])
+
 # Changed so this now returns an array of the adjacent moves
 # in form [(x,y),(x2,y2)...]
 # Better for part 2 and easy to get count from len!
@@ -126,7 +130,7 @@ def get_adj_moves_returning(coord, board, piece):
             # the only part changed
             if is_out_of_bounds(curr, board) or board[curr.y][curr.x] != EMPTY:
                 #print(curr, piece.coord)
-                print(curr.x == piece.coord.x and curr.y == piece.coord.y)
+                #print(curr.x == piece.coord.x and curr.y == piece.coord.y)
                 if not (curr.x == piece.coord.x and curr.y == piece.coord.y):
                     continue
 
@@ -170,27 +174,33 @@ def get_coord_in_dir(coord, dir):
 
 def killThemAll(board):
 
+    black_pieces = get_pieces_of_colour(BLACK_PIECE, board)
+    while len(black_pieces) != 0:
 
-    kill_something(board)
+        # if no killable... return...
+        print(len(black_pieces), "black pieces left")
+        kill_something(board, black_pieces)
+        black_pieces = get_pieces_of_colour(BLACK_PIECE, board)
 
 
-def kill_something(board):
+def kill_something(board, enemy_pieces):
     killable = []
 
     white_pieces = get_pieces_of_colour(WHITE_PIECE, board)
+    black_pieces = enemy_pieces
 
     # create kill_pair array
     # should be a priority queue,
     # use white_pieces.board[y][x] to get dist to given spot
 
-    black_pieces = get_pieces_of_colour(BLACK_PIECE, board)  # change to enemy pieces
     print(black_pieces)
 
     # go through the killable spots
     shortest_moves = []
+
     print("looping thorugh black pieces")
     for piece in black_pieces:
-        print("next black piece")
+        print("next black piece", piece.coord)
         # killable is an array of kill pair spots
         # killable += (isKillable(WHITE_PIECE, piece.coord, board))
         killable = isKillable(WHITE_PIECE, piece.coord, board)
@@ -212,10 +222,14 @@ def kill_something(board):
             # store the shortest moves
             if len(shortest_moves) == 0:
                 shortest_moves = curr
+                #easiest_enemy = piece   # the easiest enemy to kill
+
 
             # compares the lengths of the two
             elif curr[0] < shortest_moves[0]:
                 shortest_moves = curr
+                easiest_enemy = piece
+    print("The shortest moves are:")
     print(shortest_moves)
     # shortest_moves[0] is the total dist
     # shortest_moves[1][i][0] is the ith piece, ...[1] is the dest square
@@ -234,19 +248,33 @@ def kill_something(board):
 
         format_print_moves(moves)
 
+        # changing the board to its new state
+
+
+        update_board(piece.coord, EMPTY, board)     # remove the piece from its old spot
+        update_board(final_loc, WHITE_PIECE, board) # add the piece to its new location
+        update_board(easiest_enemy.coord, EMPTY, board)
+        print_board_state(board)
+
+
+
 # print out as specified by the final question
 def format_print_moves(moves):
     prev = moves[0]
-    out = ""
     for i in range(len(moves)-1):
         curr = moves[i+1]
         #print("(%d, %d) -> (%d, %d)".format(prev.x, prev.y, currx, curr.y))
-        out += "(" + str(prev.x) + ", " + str(prev.y) + ") " + "-> "
+        out = "(" + str(prev.x) + ", " + str(prev.y) + ") " + "-> "
         out += "(" + str(curr.x) + ", " + str(curr.y) + ")"
+
+        print(out)
         prev = curr
 
-    print(out)
 
+# changes the board, changing the piece at the given coordinate to char
+def update_board(coord, char, board):
+
+    board[coord.y][coord.x] = char
 
 def get_moves(piece, dest):
     print("running get moves")
@@ -260,7 +288,7 @@ def get_moves(piece, dest):
         curr_cost = piece.move_costs[curr.y][curr.x]
 
         adj = get_adj_moves_returning(curr, board, piece)
-        print(adj)
+        #print(adj)
         for i in range(len(adj)):
             nxt = adj[i]
             if piece.move_costs[nxt.y][nxt.x] == curr_cost - 1:  # if visited - ignore
@@ -303,7 +331,7 @@ def get_closest_2_pieces(target_pair, pieces):
     for coord in targets:
 
         if get_piece_from_coord(coord, board) == WHITE_PIECE:
-            target_pair.remove(coord)
+            targets.remove(coord)
             attacking_pieces.remove(get_closest_piece(coord, attacking_pieces))
 
     print("target_pair =", target_pair)
@@ -339,8 +367,8 @@ def get_pieces_of_colour(colour, board):
     for x in range(BOARD_LEN):
         for y in range(BOARD_LEN):
             if board[y][x] == colour:
-                print(x, y)
-                print("x,y")
+                #print(x, y)
+                #print("x,y")
                 piece = Piece(Coordinate(x, y), colour)
                 pieces.append(piece)
     return pieces
