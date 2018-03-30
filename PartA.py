@@ -40,6 +40,8 @@ class Piece:
         self.colour = colour
         self.move_costs = do_bfs(coord)  # creates a map with the given move costs
 
+    def __repr__(self):
+        return str(self.coord) + " " + str(self.colour)
 
 class Node:
     def __init__(self, coord, g, h):
@@ -57,67 +59,72 @@ class Node:
 def countMovesByColour(colour, board):
     count = 0
 
-    for x in range(BOARD_LEN):
-        print(board[x])
-        for y in range(BOARD_LEN):
+    for y in range(BOARD_LEN):
+        print(board[y])
+        for x in range(BOARD_LEN):
 
-            if board[x][y] == colour:
+            if board[y][x] == colour:
                 curr_coord = Coordinate(x, y)  # todo use this for getAdj
-                count += len(getAdjacentMoves(curr_coord, board))
+                count += len(get_adj_moves(curr_coord, board))
     print(count)
 
 
 # Changed so this now returns an array of the adjacent moves
 # in form [(x,y),(x2,y2)...]
 # Better for part 2 and easy to get count from len!
-def getAdjacentMoves(coord, board):
+def get_adj_moves(coord, board):
     count = 0
     moves = []
+    #print("base coord:", coord)
     for dir in DIRECTIONS:
-        curr = getCoordInDir(coord, dir)
+        curr = get_coord_in_dir(coord, dir)
+        #print(curr)
 
         # checks if out of bounds!
-
-        if isOutOfBounds(curr, board):
+        if is_out_of_bounds(curr, board) or board[curr.y][curr.x] == CORNER:  # && corner
             # Can't move here
+            #print("is out of bounds")
             continue
 
-        curr_piece = board[curr.x][curr.y]  # todo
-
+        curr_piece = board[curr.y][curr.x]  # todo
+        #print(curr_piece)
+        #print_board(board)
         # if a piece blocks its way, checks if it can jump over
         # this changes curr_x and curr_y to the jump ones
-        if (curr_piece == WHITE_PIECE or curr_piece == BLACK_PIECE):
-            curr = getCoordInDir(curr, dir)  # todo
-            if (isOutOfBounds(curr, board) or
-                    board[curr.x][curr.y] != EMPTY):
+        if curr_piece == WHITE_PIECE or curr_piece == BLACK_PIECE:
+            curr = get_coord_in_dir(curr, dir)  # todo
+
+            if (is_out_of_bounds(curr, board) or
+                    board[coord.y][coord.x] != EMPTY):
                 # Can't jump over piece
                 continue
 
         moves += [curr]  # todo
+        #print("moves")
+        #print(moves)
     return moves
 
-
-def isOutOfBounds(coord, board):  # todo
+def is_out_of_bounds(coord, board):  # todo
     x = coord.x
     y = coord.y
-    if x < 0 or x > 7 or y < 0 or y > 7 or board[x][y] == CORNER:  # todo use static variables
+    if x < 0 or x > 7 or y < 0 or y > 7: # todo use static variables
         return True
     return False
 
 
 # gets the coordinate in the given direction
-def getCoordInDir(coord, dir):
+def get_coord_in_dir(coord, dir):
     x = coord.x
     y = coord.y
 
     if dir == LEFT:
         x = x - 1
     elif dir == UP:
-        y = y + 1
+        y = y - 1
     elif dir == RIGHT:
         x = x + 1
     elif dir == DOWN:
-        y = y - 1
+        y = y + 1
 
     return Coordinate(x, y)
 
@@ -138,17 +145,27 @@ def killThemAll(board):
 
     # create kill_pair array
     # should be a priority queue,
-    # use white_pieces.board[x][y] to get dist to given spot
+    # use white_pieces.board[y][x] to get dist to given spot
 
-    black_pieces = get_pieces_of_colour(BLACK_PIECE, board)
+    black_pieces = get_pieces_of_colour(BLACK_PIECE, board) # change to enemy pieces
+    print(black_pieces)
 
     # go through the killable spots
+    print("looping thorugh black pieces")
     for piece in black_pieces:
-        killable = (isKillable(piece.colour, piece.coord, board))
 
-        # pair has form [coord1, coord2]
-        #for pair in killable:
+        # killable is an array of kill pair spots
+        killable += (isKillable(WHITE_PIECE, piece.coord, board))
+        print(killable)
 
+        # pair has form [coord1, coord2] OR [coord1]
+        for pair in killable:
+            print(pair)
+
+            #print("closest", get_closest_piece(Coordinate(4,4), white_pieces))
+
+            print("getting closest 2", get_closest_2_pieces(pair, white_pieces))
+            #get_dist_to_coords()
             # checks for the nearest 2 pieces to the kill spot
 
             #spot1_closest = get_closest_pieces(pair[0], white_pieces, board)
@@ -157,47 +174,77 @@ def killThemAll(board):
             #spot
             #print("spot1 = " + spot1_closest)
 
+# gets the total number of moves to get pieces to the given coords
+# coords - an array of coordinates. Going to be 2 or 1 for this
+# assumes there's at least 1 piece
+def get_closest_piece(coord, pieces):
+
+    piece_prioq = []
+
+    lo = 1000
+    min_piece = None
+    for piece in pieces:
+        curr = piece.move_costs[coord.y][coord.x]
+
+        if (curr < lo):
+            min_piece = piece
+            lo = curr
+
+    return min_piece
+
+
+def get_closest_2_pieces(target_pair, pieces):
+    pieces = pieces
+    tot_dist = 0
+    closest_pieces = []
+    print("target_pair =", target_pair)
+    for coord in target_pair:
+        piece = get_closest_piece(coord, pieces)
+
+        # keeps getting available pieces that haven't been mentioned before
+        while piece in closest_pieces:
+
+            # can it be a case where it doesn't exist
+
+            pieces.remove(piece)
+            piece = get_closest_piece(coord, pieces)
+        tot_dist += piece.move_costs[coord.y][coord.x]
+        closest_pieces.append(piece)
+    return [tot_dist, closest_pieces]
+
+
 
 # gets the pieces target closest to the given coordinate. Returned as a priority Q
-def get_closest_pieces(target_coord, pieces):
+def get_closest_pieces(target_coords, pieces):
     min_cost = 1000
-    closest_pieces = []
+    closest_piece
     cost_list = []
+
     for piece in pieces:
 
-        cost_list.append(piece.move_costs[target_coord.x][target_coord.y])
+        print()
+
 
         # a priority Q would be better here
 
     return closest_pieces
 
+#def get_closest(target_coord):
 
-    '''
-    for x in range(BOARD_LEN):
-        for y in range(BOARD_LEN):
-            if board[x][y] == BLACK_PIECE:
-                print("Checking ")
-                print(x, y)
-
-                coord = Coordinate(x, y)
-                # Checks for kill pairs. Then, adds them to array
-                do_bfs(Coordinate(0,0))
-
-                killable += (isKillable(WHITE_PIECE, coord, board))
-                for i in range(len(killable)):
-                    findClosestPiece(killable[i][0])
-                    findClosestPiece(killable[i][1])
-    '''
 
 #def get_killable_pairs():
 
 
 # Returns an array of the pieces of a given colour
+
+# returns peices of type Piece
 def get_pieces_of_colour(colour, board):
     pieces = []
     for x in range(BOARD_LEN):
         for y in range(BOARD_LEN):
-            if board[x][y] == colour:
+            if board[y][x] == colour:
+                print(x, y)
+                print("x,y")
                 piece = Piece(Coordinate(x, y), colour)
                 pieces.append(piece)
     return pieces
@@ -210,36 +257,70 @@ def getManhattanDistance(start, finish):
 
 # Checks if a piece is killable and returns the possible kill pairs as
 # as an array of tuples
+# colour is the colour of the pieces trying to take the given piece
 def isKillable(colour, coord, board):
     killable = []
 
     # Checks horizontal pair
 
-    if (isKillSpot(getCoordInDir(coord, LEFT), board, colour) and
-            isKillSpot(getCoordInDir(coord, RIGHT), board, colour)):
-        killable += [[(getCoordInDir(coord, LEFT)), getCoordInDir(coord, RIGHT)]]
+    # the characters at the given spot
+    left = get_coord_in_dir(coord, LEFT)
+    right = get_coord_in_dir(coord, RIGHT)
+    up = get_coord_in_dir(coord, UP)
+    down = get_coord_in_dir(coord, DOWN)
+
+    if (isKillSpot(left, board, colour) and
+            isKillSpot(right, board, colour)):
+        curr = []
+        if get_piece_from_coord(left, board) != CORNER:
+            curr += [left]
+
+        if get_piece_from_coord(right, board) != CORNER:
+            curr += [right]
+
+        killable += [curr] # add a pair
 
     # checks vertical pair
-    if (isKillSpot(getCoordInDir(coord, UP), board, colour) and
-            isKillSpot(getCoordInDir(coord, DOWN), board, colour)):
-        killable += [[(getCoordInDir(coord, UP)), (getCoordInDir(coord, DOWN))]]
-    # print(killable)
+
+    if (isKillSpot(up, board, colour) and
+            isKillSpot(down, board, colour)):
+        curr = []
+
+        if get_piece_from_coord(up, board) != CORNER:
+            curr += [up]
+
+        if get_piece_from_coord(down, board) != CORNER:
+            curr += [down]
+        print(curr)
+        killable += [curr]
+
+        #killable += [[up, down]]    # add a pair
+
+    print(killable)
     return killable
+
 
 #[(coord1,coord2),(coord1,coord2)]
 
 def isKillSpot(coord, board, colour):
-    if isOffBoard((coord.x, coord.y), board):
+    if is_off_board(coord, board):
         return False
 
-    curr = getPieceFromCoord(coord, board)
+    curr = get_piece_from_coord(coord, board)
     return (curr == CORNER or
             curr == colour or
             curr == EMPTY)
 
 
-def getPieceFromCoord(coord, board):
-    return board[coord.x][coord.y]
+def is_off_board(coord, board):
+    x = coord.x
+    y = coord.y
+    if x < 0 or x > 7 or y < 0 or y > 7:
+        return True
+    return False
+
+def get_piece_from_coord(coord, board):
+    return board[coord.y][coord.x]
 
 
 # finds the closest piece
@@ -258,7 +339,7 @@ def findClosestPiece(coord):
         visited.append(temp_line)
 
     dist = 0
-    visited[coord.x][coord.y] = dist
+    visited[coord.y][coord.x] = dist
 
     # init the queue
     q = Queue()
@@ -267,23 +348,23 @@ def findClosestPiece(coord):
     while not q.empty():  # TODO
         dist += 1
         curr = q.get()
-        adj = getAdjacentMoves(curr, board)  # todo
+        adj = get_adj_moves(curr, board)  # todo
         for i in range(len(adj)):
             next = adj[i]
-            if visited[next.x][next.y] == NOT_VISITED:  # if visited - ignore
+            if visited[next.y][next.x] == NOT_VISITED:  # if visited - ignore
                 q.put(next)
-                visited[next.x][next.y] = visited[curr.x][curr.y] + 1
+                visited[next.y][next.x] = visited[curr.y][curr.x] + 1
                 # visited[adj[i][0]][adj[i][1]] = visited[curr[0]][curr[1]]+1
 
-    printBoard(visited)
+    print_board(visited)
 
 
 def do_bfs(coord):
-    print(coord)
     print()
+    print(coord)
     visited = init_visited()
     dist = 0
-    visited[coord.x][coord.y] = dist
+    visited[coord.y][coord.x] = dist
 
     q = Queue()
     q.put(coord)
@@ -291,18 +372,18 @@ def do_bfs(coord):
     while not q.empty():
         dist += 1
         curr = q.get()
-        adj = getAdjacentMoves(curr, board)
+        adj = get_adj_moves(curr, board)
         for i in range(len(adj)):
             nxt = adj[i]
-            if visited[nxt.x][nxt.y] == NOT_VISITED:  # if visited - ignore
+            if visited[nxt.y][nxt.x] == NOT_VISITED:  # if visited - ignore
                 q.put(nxt)
-                visited[nxt.x][nxt.y] = visited[curr.x][curr.y] + MOVE_COST
+                visited[nxt.y][nxt.x] = visited[curr.y][curr.x] + MOVE_COST
 
-    printBoard(visited) #remove to stop printing
+    print_board(visited) #remove to stop printing
     return visited
 
 
-def printBoard(board):
+def print_board(board):
     print("Printing out the current board:")
     for i in range(BOARD_LEN):
         print("|", end="")
@@ -311,11 +392,11 @@ def printBoard(board):
         print("|")
 
 
+
 def isOffBoard(coord, board):  # todo cahnge to otehr
-    coord = Coordinate(coord[0], coord[1])
     x = coord.x
     y = coord.y
-    if x < 0 or x > 7 or y < 0 or y > 7 or board[x][y] == CORNER:
+    if x < 0 or x > 7 or y < 0 or y > 7 or board[y][x] == CORNER:
         return True
     return False
 
@@ -338,7 +419,7 @@ def a_star(start, finish):
         visited.append(temp_line)
 
     heapq.heappush(Q, (curr.g, curr))
-    visited[curr.coord.x][curr.coord.y] = curr
+    visited[curr.coord.y][curr.coord.x] = curr
     closed = []
 
     # go through all possible adjacent moves
@@ -356,18 +437,18 @@ def a_star(start, finish):
         # adding to the closed set
 
         # check adjacent squares for unvisited coordinates
-        adj = getAdjacentMoves(curr.coord, board)
+        adj = get_adj_moves(curr.coord, board)
         for next_coord in adj:
             # TODO add constant for +1
 
             nxt = Node(next_coord, curr.g + MOVE_COST, getManhattanDistance(next_coord, finish))
-            if (visited[nxt.coord.x][nxt.coord.y] == None or
-                    (nxt.g < visited[nxt.coord.x][nxt.coord.y].g)):  # TODO do I have to compare f values
+            if (visited[nxt.coord.y][nxt.coord.x] == None or
+                    (nxt.g < visited[nxt.coord.y][nxt.coord.x].g)):  # TODO do I have to compare f values
                 # add node to q
                 # add coord to visited
                 heapq.heappush(Q, (nxt.g, nxt))
 
-                visited[nxt.coord.x][nxt.coord.y] = nxt
+                visited[nxt.coord.y][nxt.coord.x] = nxt
 
     printBoardNodes(visited)
 
@@ -417,13 +498,23 @@ def init_visited():
 # Reads in input
 board = []
 
+#a = "X - - - - - - X - - - - - - - - - - - - - 0 0 - - - - - @ 0 - - - - - - - - - - - - - - - 0 - - - - - - @ - @ @ X - - - - - - X"
+
+a = ["X - - - - - - X", "- - - - - - - -", "- - - - - O - -", "- - - - @ O - -", "- - - - - - O -", "- - - - - O @ -", "- - - - - - - @", "X - - - - - - X"]
+
+for i in range(BOARD_LEN):
+    temp_line = a[i].split(" ")
+    board.append(temp_line)
+
+
+'''
 def initBoard():
     for i in range(BOARD_LEN):
         temp_line = input().split(" ")
         board.append(temp_line)
 
 initBoard()
-
+'''
 print(board)
 # if move:
 # count Moves by Colour
