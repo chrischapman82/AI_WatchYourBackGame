@@ -1,0 +1,39 @@
+ 
+Sharing the load:
+	•	Using github to constantly update where we are up to
+	•	Create base together
+	•	I think best if we try a few different approaches
+	◦	ML sounds promising and extremely interesting
+	•	However, from my tutor, some work really well, and others just fall in a heap and lose out on the 7 marks.
+	•	From what I understand, won't be all that hard to implement.
+	•	Have no prev data, so would have to use unsupervised learning
+	•	Need a way to have it create an evaluation function
+	•	Then use a 
+	•	Devise a cutoff
+ 
+	•	What we have to solve:
+	▪	Credit assignment
+	•	Need to know which actions were responsible for the outcome
+ 
+	◦	Standard:
+	•	Create an evaluation fn
+	▪	Easy: Win/lose game, take/lose piece, move away from sides when board shrinks
+	▪	Hard: What are good moves that don't involve this? - Reduces the amount of moves the enemy can do, near a friendly piece protecting them
+ 
+	•	Use minimax
+ 
+ 
+Wanna do weekly meetings?
+	•	Basically any day works for me
+	•	I have my AI tute from 9-11 on Friday, how's 11 onwards sound, that way I can ask my tutor some Qs after the tute.
+ 
+For weekly meetings:
+	•	Work in our own time, then meet up on <day> to compare, chat about what we have been doing and how we're going to implement the next part.
+	•	If somewhat completed, run the code, play against previous versions, record any progress
+ 
+Planning around assignments:
+ 
+Chris:
+	•	SWEN: Ass2 29th Apr
+	•	ML Stage 1: 9 May, Wed
+ 
